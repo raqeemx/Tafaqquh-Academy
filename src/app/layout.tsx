@@ -20,10 +20,11 @@ export default function RootLayout({
           انتقل إلى المحتوى
         </a>
         <SiteHeader />
-        <main id="main" className="min-h-[60vh]">{children}</main>
+        <main id="main" className="min-h-[60vh]">
+          {children}
+        </main>
         <SiteFooter />
       </body>
     </html>
   );
 }
-

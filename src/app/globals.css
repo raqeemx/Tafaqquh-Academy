@@ -689,3 +689,29 @@ p {
   }
 }
 
+.auth-single {
+  max-width: 540px;
+  margin-inline: auto;
+}
+.student-status {
+  max-width: 760px;
+  margin-top: 32px;
+  display: grid;
+  gap: 24px;
+}
+.student-status .actions {
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.student-status .notice h2 {
+  font-size: 22px;
+}
+.restricted-content article {
+  border-bottom: 1px solid var(--line);
+  padding-block: 24px;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}

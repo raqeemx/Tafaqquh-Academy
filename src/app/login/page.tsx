@@ -29,7 +29,7 @@ export default function Login() {
       <section className="login-card">
         <span className="eyebrow">أهلًا بعودتك</span>
         <h1>دخول الطالب</h1>
-        <p>تصميم أولي لمساحة الطالب في الأكاديمية.</p>
+        <p>تابع حالة طلبك ورحلتك التعليمية.</p>
         <LoginForm />
         <Link href="/" className="back-home">
           العودة إلى الرئيسية
