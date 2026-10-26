@@ -1,0 +1,14 @@
+# Proposed project-level custom role for the runtime identity; review in staging first.
+# Keep platform-managed App Hosting build/run roles separate and unchanged.
+title: Academy Runtime Data Access
+description: Read Auth users and transact on academy documents without deleting users or data.
+stage: GA
+includedPermissions:
+  - firebaseauth.users.get
+  - datastore.databases.get
+  - datastore.databases.getMetadata
+  - datastore.entities.get
+  - datastore.entities.list
+  - datastore.entities.create
+  - datastore.entities.update
+  - resourcemanager.projects.get
