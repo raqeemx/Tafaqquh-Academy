@@ -1,0 +1,49 @@
+# Select environment name "staging" in the new STAGING backend.
+# Fill empty values in backend Environment settings before a rollout.
+# Console values override this template. Never copy production values.
+env:
+  - variable: APP_ENV
+    value: "staging"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_APP_ENV
+    value: "staging"
+    availability: [BUILD, RUNTIME]
+  - variable: APP_ORIGIN
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: FIREBASE_PROJECT_ID
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: FIREBASE_STAGING_PROJECT_ID
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STAGING_PROJECT_ID
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_PRIVACY_CONTROLLER
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_PRIVACY_CONTACT
+    value: ""
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_PRIVACY_RETENTION
+    value: ""
+    availability: [BUILD, RUNTIME]

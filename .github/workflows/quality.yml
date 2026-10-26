@@ -24,7 +24,9 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run test:config
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm test
       - run: npm run test:rules
+

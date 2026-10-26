@@ -4,7 +4,9 @@
   "description": "Arabic Islamic Learning Management Platform",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/check-staging.mjs && next build",
+    "test:config": "node --test tests/config/*.test.mjs",
+    "test:staging": "playwright test --config playwright.staging.config.ts",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

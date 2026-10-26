@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 export default defineConfig({
   testDir: "./tests",
-  testIgnore: "**/security/**",
+  testIgnore: ["**/security/**", "**/staging/**", "**/config/**"],
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   use: {
@@ -20,3 +20,4 @@ export default defineConfig({
     timeout: 60000,
   },
 });
+

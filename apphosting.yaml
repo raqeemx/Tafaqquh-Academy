@@ -1,0 +1,23 @@
+# Safe base. This file neither creates a backend nor authorizes deployment.
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 40
+  cpu: 1
+  memoryMiB: 512
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_ENABLED
+    value: "false"
+    availability: [BUILD, RUNTIME]
+  - variable: FIREBASE_ADMIN_ENABLED
+    value: "false"
+    availability: [RUNTIME]
+  - variable: NEXT_PUBLIC_PRIVACY_POLICY_APPROVED
+    value: "false"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_USE_EMULATORS
+    value: "false"
+    availability: [BUILD, RUNTIME]
+  - variable: FIREBASE_USE_EMULATORS
+    value: "false"
+    availability: [BUILD, RUNTIME]
