@@ -55,6 +55,8 @@ for (const width of [390, 1280]) {
       "/login",
       "/register",
       "/student",
+      "/admin",
+      "/privacy",
     ]) {
       expect((await page.goto(route))?.status()).toBe(200);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -66,6 +68,25 @@ for (const width of [390, 1280]) {
     }
   });
 }
+test("admin endpoints reject anonymous users", async ({ request }) => {
+  for (const path of [
+    "/api/admin/overview",
+    "/api/admin/students",
+    "/api/admin/audit",
+    "/api/admin/students/unknown",
+  ]) {
+    const response = await request.get(path);
+    expect(response.status()).toBe(401);
+    expect(response.headers()["cache-control"]).toContain("no-store");
+  }
+  expect(
+    (
+      await request.post("/api/admin/students/unknown", {
+        data: { action: "approve" },
+      })
+    ).status(),
+  ).toBe(401);
+});
 test("unknown routes show an Arabic not-found page", async ({ page }) => {
   expect((await page.goto("/missing-page"))?.status()).toBe(404);
   await expect(

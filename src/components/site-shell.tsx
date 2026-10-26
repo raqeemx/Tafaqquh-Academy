@@ -33,7 +33,9 @@ export function SiteFooter() {
         <div className="brand">
           تفقّه <small>علمٌ يؤصّل، وفهمٌ يبني.</small>
         </div>
-        <p>نسخة تأسيسية · المحتوى التعليمي والتسجيل قيد الإعداد</p>
+        <p>الوصول إلى البرامج بعد تأكيد البريد وقبول التسجيل</p>
+        <Link href="/privacy">سياسة الخصوصية</Link>
+        <Link href="/admin">الإدارة</Link>
         <Link href="/new-student">
           دليل البداية <span aria-hidden="true">←</span>
         </Link>

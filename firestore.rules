@@ -1,36 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function owner(uid) {
-      return request.auth != null && request.auth.uid == uid;
-    }
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function currentConsent(data) { return data.consentVersion == '2026-10-26.v1' && data.consentedAt == request.time; }
     function approved() {
+      let profile = get(/databases/$(database)/documents/students/$(request.auth.uid)).data;
       return request.auth != null && request.auth.token.email_verified == true
-        && get(/databases/$(database)/documents/students/$(request.auth.uid)).data.status == 'approved';
+        && profile.status == 'approved' && profile.consentVersion == '2026-10-26.v1';
+    }
+    function enrolled(programId) {
+      return programId is string && approved()
+        && get(/databases/$(database)/documents/students/$(request.auth.uid)/enrollments/$(programId)).data.active == true
+        && get(/databases/$(database)/documents/programs/$(programId)).data.published == true;
     }
     match /students/{uid} {
       allow get: if owner(uid);
       allow list: if false;
       allow create: if owner(uid)
-        && request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'status', 'createdAt', 'updatedAt'])
-        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'status', 'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'status', 'createdAt', 'updatedAt', 'consentVersion', 'consentedAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'status', 'createdAt', 'updatedAt', 'consentVersion', 'consentedAt'])
         && request.resource.data.uid == uid
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.displayName is string
-        && request.resource.data.displayName.size() >= 2
-        && request.resource.data.displayName.size() <= 100
+        && request.resource.data.displayName.size() >= 2 && request.resource.data.displayName.size() <= 100
         && request.resource.data.status == 'pending'
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.updatedAt == request.time;
-      // Admission decisions and profile changes are trusted-server-only.
-      allow update, delete: if false;
+        && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time
+        && currentConsent(request.resource.data);
+      // Legacy students may renew consent, never their name, identity, status or role.
+      allow update: if owner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consentVersion', 'consentedAt', 'updatedAt'])
+        && currentConsent(request.resource.data) && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+      match /enrollments/{programId} {
+        allow read: if owner(uid);
+        allow write: if false;
+      }
+    }
+    match /programs/{programId} {
+      allow get: if enrolled(programId);
+      allow list, write: if false;
     }
     match /restrictedContent/{contentId} {
-      allow read: if approved() && resource.data.published == true;
+      allow read: if resource.data.published == true && enrolled(resource.data.programId);
       allow write: if false;
     }
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    // Administrator records, reasons and audit events are never client-accessible.
+    match /{document=**} { allow read, write: if false; }
   }
 }

@@ -1,60 +1,36 @@
-import { NextResponse } from "next/server";
-import { getAdminServices } from "@/lib/firebase/admin";
+import { acceptedStudent } from "@/lib/server/student";
+import { ApiError, failure, json, safeId } from "@/lib/server/api";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const headers = { "Cache-Control": "private, no-store", Vary: "Authorization" };
-function error(message: string, status: number) {
-  return NextResponse.json({ error: message }, { status, headers });
-}
 export async function GET(request: Request) {
-  const authorization = request.headers.get("authorization");
-  if (!authorization?.startsWith("Bearer ") || authorization.length > 8192)
-    return error("يلزم تسجيل الدخول.", 401);
-  let services: ReturnType<typeof getAdminServices>;
   try {
-    services = getAdminServices();
-  } catch {
-    return error("الخدمة غير مهيأة بعد.", 503);
-  }
-  let uid: string;
-  try {
-    const token = await services.auth.verifyIdToken(
-      authorization.slice(7),
-      true,
+    const { db, token } = await acceptedStudent(request);
+    const programId = new URL(request.url).searchParams.get("programId");
+    if (!safeId(programId))
+      throw new ApiError(400, "اختر برنامجًا من برامجك المتاحة.");
+    const [program, enrollment] = await db.getAll(
+      db.doc(`programs/${programId}`),
+      db.doc(`students/${token.uid}/enrollments/${programId}`),
     );
-    if (!token.email_verified)
-      return error("يجب تأكيد البريد الإلكتروني أولًا.", 403);
-    uid = token.uid;
-  } catch {
-    return error("الجلسة غير صالحة. سجّل الدخول مجددًا.", 401);
-  }
-  try {
-    // Admin bypasses Rules: repeat authorization on EVERY request with live status.
-    const student = await services.db.doc(`students/${uid}`).get();
-    if (student.data()?.status !== "approved")
-      return error("يتطلب المحتوى قبول طلب التسجيل.", 403);
-    const result = await services.db
+    if (
+      program.data()?.published !== true ||
+      enrollment.data()?.active !== true
+    )
+      throw new ApiError(403, "ليس لديك تسجيل فعّال في هذا البرنامج.");
+    const result = await db
       .collection("restrictedContent")
+      .where("programId", "==", programId)
       .where("published", "==", true)
       .limit(50)
       .get();
-    return NextResponse.json(
-      {
-        items: result.docs.map((document) => ({
-          id: document.id,
-          title:
-            typeof document.data().title === "string"
-              ? document.data().title
-              : "",
-          body:
-            typeof document.data().body === "string"
-              ? document.data().body
-              : "",
-        })),
-      },
-      { headers },
-    );
-  } catch {
-    return error("تعذّر تحميل المحتوى. حاول لاحقًا.", 503);
+    return json({
+      items: result.docs.map((doc) => ({
+        id: doc.id,
+        title: typeof doc.data().title === "string" ? doc.data().title : "",
+        body: typeof doc.data().body === "string" ? doc.data().body : "",
+      })),
+    });
+  } catch (error) {
+    return failure(error);
   }
 }

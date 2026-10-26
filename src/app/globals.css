@@ -715,3 +715,451 @@ button:disabled {
   opacity: 0.6;
   transform: none;
 }
+
+/* Administrative workspace and consent */
+.admin-shell {
+  padding-block: 40px 80px;
+}
+.admin-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+.admin-heading h1 {
+  font-size: 2.4rem;
+  letter-spacing: -0.8px;
+}
+.admin-heading .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.admin-heading p {
+  font-size: 14px;
+  margin-top: 8px;
+}
+.admin-session {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-block: 20px 30px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.admin-feedback {
+  margin-block: 18px;
+}
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.admin-stats article {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffefa;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+}
+.admin-stats article svg {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  color: #718462;
+}
+.admin-stats article span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.admin-stats strong {
+  font-size: 34px;
+  line-height: 1.2;
+}
+.admin-tabs {
+  display: flex;
+  gap: 26px;
+  border-bottom: 1px solid var(--line);
+  margin-top: 34px;
+}
+.admin-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 4px;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  color: var(--muted);
+}
+.admin-tabs button[aria-pressed="true"] {
+  color: var(--green);
+  border-color: var(--green);
+  font-weight: 700;
+}
+.admin-panel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-top: 24px;
+  padding: 26px;
+  background: #fffefa;
+}
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.panel-heading h2 {
+  font-size: 21px;
+}
+.admin-filters {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.6fr) 1fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+.admin-filters label,
+.review-form > label,
+.restricted-content > label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.admin-filters input,
+.admin-filters select,
+.review-form select,
+.review-form textarea,
+.restricted-content select {
+  width: 100%;
+  border: 1px solid #c4cec0;
+  border-radius: 6px;
+  padding: 11px;
+  background: white;
+  color: var(--ink);
+  min-width: 0;
+  font: inherit;
+  font-size: 13px;
+}
+.search-field {
+  position: relative;
+}
+.search-field svg {
+  position: absolute;
+  top: 16px;
+  inset-inline-start: 10px;
+  color: #76836d;
+}
+.search-field input {
+  padding-inline-start: 36px;
+}
+.admin-filters .button {
+  padding-inline: 16px;
+}
+.admin-table-wrap {
+  margin-top: 22px;
+  overflow-x: auto;
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: start;
+}
+.admin-table th {
+  text-align: start;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 14px 12px;
+  background: #f3f5ed;
+  font-weight: 400;
+}
+.admin-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 19px 12px;
+  font-size: 13px;
+}
+.admin-table td strong {
+  display: block;
+  font-size: 14px;
+}
+.student-email {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.admin-table .button {
+  padding: 8px 16px;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.status-pill {
+  display: inline-flex;
+  border-radius: 30px;
+  padding: 3px 12px;
+  font-size: 11px;
+  background: #edf0e8;
+  color: #42543b;
+  white-space: nowrap;
+}
+.status-pending {
+  background: #f8edd2;
+  color: #76580b;
+}
+.status-approved {
+  background: #e0efe1;
+  color: #285c38;
+}
+.status-rejected {
+  background: #f7e4e0;
+  color: #874439;
+}
+.status-suspended {
+  background: #eee8f3;
+  color: #624875;
+}
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+.empty-state h2,
+.empty-state h3 {
+  font-size: 21px;
+}
+.empty-state p {
+  font-size: 13px;
+}
+.load-more {
+  display: flex;
+  margin: 24px auto 0;
+}
+.review-dialog {
+  margin: auto;
+  width: min(620px, calc(100% - 32px));
+  max-height: 88vh;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.review-dialog::backdrop {
+  background: #102f29a8;
+}
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+.review-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 7px;
+}
+.review-identity > bdi {
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  font-size: 13px;
+}
+.review-facts {
+  display: grid;
+  gap: 8px;
+  margin-block: 20px;
+  font-size: 12px;
+}
+.review-facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+.review-facts dt {
+  color: var(--muted);
+}
+.review-form > label {
+  margin-top: 20px;
+}
+.review-form .notice {
+  margin-top: 15px;
+}
+.review-form > .button {
+  width: 100%;
+  margin-top: 18px;
+}
+.consent-block {
+  margin-top: 20px;
+}
+.consent-check,
+.login-form label.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.consent-check input,
+.login-form .consent-check input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin-top: 4px;
+  accent-color: var(--green);
+}
+.consent-check a {
+  text-decoration: underline;
+  font-weight: 700;
+}
+.audit-list {
+  list-style: none;
+  padding: 0;
+}
+.audit-list li {
+  border-bottom: 1px solid var(--line);
+  padding-block: 22px;
+}
+.audit-list li > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.audit-list time,
+.audit-list p {
+  font-size: 12px;
+}
+.audit-list bdi {
+  overflow-wrap: anywhere;
+}
+.audit-reason {
+  white-space: pre-wrap;
+  background: #f2f1e9;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+}
+.policy-page {
+  max-width: 800px;
+}
+.policy-page h1 {
+  font-size: 2.5rem;
+}
+.policy-page section {
+  margin-top: 30px;
+}
+.policy-page h2 {
+  font-size: 21px;
+  margin-bottom: 12px;
+}
+.policy-version {
+  margin-block: 15px 25px;
+  font-size: 13px;
+}
+.student-start {
+  margin: 0 0 36px;
+}
+.staging-banner {
+  padding: 10px 20px;
+  text-align: center;
+  background: #f8edd2;
+  color: #76580b;
+  font-size: 13px;
+}
+@media (max-width: 1000px) {
+  .admin-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .admin-filters .button {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 640px) {
+  .admin-shell {
+    padding-block: 28px 50px;
+  }
+  .admin-heading {
+    align-items: start;
+  }
+  .admin-heading h1 {
+    font-size: 26px;
+  }
+  .admin-heading p {
+    font-size: 12px;
+  }
+  .admin-heading > .button {
+    font-size: 11px;
+    padding: 8px 10px;
+    gap: 7px;
+  }
+  .admin-stats {
+    gap: 8px;
+  }
+  .admin-stats article {
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .admin-stats article span {
+    font-size: 11px;
+  }
+  .admin-stats strong {
+    font-size: 27px;
+  }
+  .admin-panel {
+    padding: 16px;
+  }
+  .admin-tabs {
+    gap: 20px;
+    font-size: 13px;
+  }
+  .admin-table thead {
+    display: none;
+  }
+  .admin-table,
+  .admin-table tbody {
+    display: block;
+  }
+  .admin-table tr {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+  }
+  .admin-table td {
+    display: block;
+    border: 0;
+    padding: 7px 0;
+  }
+  .admin-table td[data-label="التاريخ"]::before {
+    content: "التسجيل: ";
+    color: var(--muted);
+  }
+  .admin-table td .button {
+    width: 100%;
+  }
+  .panel-heading {
+    align-items: flex-start;
+  }
+  .panel-heading h2 {
+    font-size: 18px;
+  }
+  .review-dialog {
+    padding: 18px;
+  }
+}
