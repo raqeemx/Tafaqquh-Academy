@@ -35,6 +35,14 @@ export default function NewStudent() {
           هذه خطوات تعينك على الاستعداد لرحلتك في طلب العلم.
         </p>
       </div>
+      <div className="actions student-start">
+        <Link href="/register" className="button button-primary">
+          إنشاء حساب طالب <ArrowLeft size={18} />
+        </Link>
+        <Link href="/privacy" className="text-link">
+          اقرأ سياسة الخصوصية
+        </Link>
+      </div>
       <div className="student-grid">
         <section aria-label="خطوات الاستعداد" className="steps">
           {steps.map(([title, text], i) => (

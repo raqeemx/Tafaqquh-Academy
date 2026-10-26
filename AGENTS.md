@@ -10,6 +10,8 @@
 - Authentication is authorized for the existing tafaqquh-academy project. Never expose restricted content before BOTH verified email and live approved student status. Client writes cannot approve, reject, change roles, or delete admission records. Keep Admin server-only and repeat authorization because Admin bypasses Rules. Run emulator security tests; never use real student accounts for tests.
 - Before a PR, run `npm run lint`, `npm run typecheck`, `npm run build`, and `npm test`. Keep package-lock.json committed; verify mobile RTL and no-config rendering.
 - Make changes on a separate feature branch and describe limitations honestly in the PR.
+- Restricted content additionally requires current privacy consent and an active enrollment in its published program. Keep administrator registry and audit/private notes inaccessible to client SDKs. Administrative mutations must recheck the live role inside the transaction, preserve immutable audit entries, and handle stale/repeated requests safely.
+- Use only the demo-tafaqquh project for emulator tests. Cloud staging must use a separate explicit project, never production data. Privacy policy approval and controller/contact/retention information are required before registration is enabled.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

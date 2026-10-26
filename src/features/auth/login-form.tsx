@@ -18,11 +18,19 @@ import {
 } from "@/lib/firebase/client";
 import { ensureStudentProfile } from "./student-profile";
 import { authError } from "./errors";
+import { ConsentCheckbox } from "./privacy-consent";
+import { isPrivacyApproved } from "@/lib/privacy/policy";
 
-export function LoginForm({ mode = "login" }: { mode?: "login" | "register" }) {
+export function LoginForm({
+  mode = "login",
+  destination = "/student",
+}: {
+  mode?: "login" | "register";
+  destination?: "/student" | "/admin";
+}) {
   const router = useRouter();
   const register = mode === "register";
-  const ready = isFirebaseConfigured();
+  const ready = isFirebaseConfigured() && (!register || isPrivacyApproved());
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -35,9 +43,13 @@ export function LoginForm({ mode = "login" }: { mode?: "login" | "register" }) {
     const name = String(data.get("displayName") ?? "").trim();
     if (
       register &&
-      (password !== data.get("confirmation") || name.length < 2)
+      (password !== data.get("confirmation") ||
+        name.length < 2 ||
+        data.get("consent") !== "on")
     ) {
-      setMessage("تحقق من الاسم وتطابق كلمتي المرور.");
+      setMessage(
+        "تحقق من الاسم وتطابق كلمتي المرور والموافقة على سياسة الخصوصية.",
+      );
       return;
     }
     setBusy(true);
@@ -54,7 +66,7 @@ export function LoginForm({ mode = "login" }: { mode?: "login" | "register" }) {
         // Auth and Firestore are not atomic. The student page can recover a missing profile.
         try {
           await updateProfile(user, { displayName: name });
-          await ensureStudentProfile(user, name);
+          await ensureStudentProfile(user, name, true);
           await sendEmailVerification(user);
         } catch {
           router.replace("/student?complete=1");
@@ -63,7 +75,7 @@ export function LoginForm({ mode = "login" }: { mode?: "login" | "register" }) {
       } else {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       }
-      router.replace("/student");
+      router.replace(destination);
     } catch (error) {
       setMessage(authError(error));
     } finally {
@@ -165,6 +177,7 @@ export function LoginForm({ mode = "login" }: { mode?: "login" | "register" }) {
             ثمانية أحرف على الأقل. إنشاء الحساب لا يعني قبول التسجيل؛ يلزم تأكيد
             البريد وموافقة الإدارة.
           </p>
+          <ConsentCheckbox disabled={!ready || busy} />
         </>
       )}
       <button
@@ -188,9 +201,11 @@ export function LoginForm({ mode = "login" }: { mode?: "login" | "register" }) {
           نسيت كلمة المرور؟
         </button>
       )}
-      <Link className="back-home" href={register ? "/login" : "/register"}>
-        {register ? "لديك حساب؟ سجّل الدخول" : "طالب جديد؟ أنشئ حسابًا"}
-      </Link>
+      {destination !== "/admin" && (
+        <Link className="back-home" href={register ? "/login" : "/register"}>
+          {register ? "لديك حساب؟ سجّل الدخول" : "طالب جديد؟ أنشئ حسابًا"}
+        </Link>
+      )}
     </form>
   );
 }

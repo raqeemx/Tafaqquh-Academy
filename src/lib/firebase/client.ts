@@ -1,6 +1,7 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { validFirebaseTarget } from "./environment";
 
 // Explicit access is required for Next.js to inline public build-time variables.
 const config = {
@@ -17,7 +18,12 @@ export function isFirebaseConfigured() {
   return (
     process.env.NEXT_PUBLIC_FIREBASE_AUTH_ENABLED === "true" &&
     Object.values(config).every((value) => Boolean(value?.trim())) &&
-    config.projectId === "tafaqquh-academy"
+    validFirebaseTarget(
+      process.env.NEXT_PUBLIC_APP_ENV ?? "local",
+      config.projectId,
+      process.env.NEXT_PUBLIC_FIREBASE_USE_EMULATORS === "true",
+      process.env.NEXT_PUBLIC_FIREBASE_STAGING_PROJECT_ID,
+    )
   );
 }
 

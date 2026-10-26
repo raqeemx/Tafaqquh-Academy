@@ -19,6 +19,11 @@ export default function RootLayout({
         <a className="skip-link" href="#main">
           انتقل إلى المحتوى
         </a>
+        {process.env.NEXT_PUBLIC_APP_ENV === "staging" && (
+          <div className="staging-banner">
+            بيئة تجريبية — لا تستخدم بيانات طلاب حقيقية
+          </div>
+        )}
         <SiteHeader />
         <main id="main" className="min-h-[60vh]">
           {children}

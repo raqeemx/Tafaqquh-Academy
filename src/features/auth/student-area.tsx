@@ -13,65 +13,13 @@ import {
   getFirebaseServices,
   isFirebaseConfigured,
 } from "@/lib/firebase/client";
-import { ensureStudentProfile } from "./student-profile";
+import { ensureStudentProfile, renewConsent } from "./student-profile";
+import { ConsentCheckbox } from "./privacy-consent";
+import { PRIVACY_VERSION, isPrivacyApproved } from "@/lib/privacy/policy";
+import { ApprovedContent } from "./approved-content";
 import { authError } from "./errors";
 
-type Profile = { status: string; displayName: string };
-function ApprovedContent({ user }: { user: User }) {
-  const [items, setItems] = useState<
-    { id: string; title: string; body: string }[] | null
-  >(null);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    let active = true;
-    const controller = new AbortController();
-    async function load() {
-      try {
-        const token = await user.getIdToken();
-        const response = await fetch("/api/student/content", {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        const data = await response.json();
-        if (!active) return;
-        if (!response.ok) {
-          setError(data.error ?? "تعذّر تحميل المحتوى.");
-          return;
-        }
-        setItems(data.items);
-      } catch {
-        if (active)
-          setError("تعذّر الاتصال بالمحتوى. أعد تحميل الصفحة للمحاولة.");
-      }
-    }
-    void load();
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [user]);
-  return (
-    <section className="restricted-content">
-      <h2>المحتوى التعليمي</h2>
-      {error ? (
-        <p role="alert">{error}</p>
-      ) : items === null ? (
-        <p role="status">جارٍ تحميل المحتوى…</p>
-      ) : !items.length ? (
-        <p>لا يوجد محتوى منشور حتى الآن.</p>
-      ) : (
-        items.map((item) => (
-          <article key={item.id}>
-            <h3>{item.title}</h3>
-            <p className="whitespace-pre-wrap">{item.body}</p>
-          </article>
-        ))
-      )}
-    </section>
-  );
-}
-
+type Profile = { status: string; displayName: string; consentVersion: string };
 export function StudentArea() {
   const ready = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
@@ -104,6 +52,9 @@ export function StudentArea() {
                 ? {
                     status: String(snapshot.data().status),
                     displayName: String(snapshot.data().displayName),
+                    consentVersion: String(
+                      snapshot.data().consentVersion ?? "",
+                    ),
                   }
                 : null,
             );
@@ -143,7 +94,11 @@ export function StudentArea() {
     event.preventDefault();
     if (!user) return;
     const name = String(new FormData(event.currentTarget).get("name") ?? "");
-    void action(() => ensureStudentProfile(user, name), "أُرسل طلبك للمراجعة.");
+    const consent = new FormData(event.currentTarget).get("consent") === "on";
+    void action(
+      () => ensureStudentProfile(user, name, consent),
+      "أُرسل طلبك للمراجعة.",
+    );
   }
   if (!ready)
     return (
@@ -214,7 +169,11 @@ export function StudentArea() {
             defaultValue={user.displayName ?? ""}
             required
           />
-          <button className="button button-primary" disabled={busy}>
+          <ConsentCheckbox disabled={busy} />
+          <button
+            className="button button-primary"
+            disabled={busy || !isPrivacyApproved()}
+          >
             إكمال طلب التسجيل
           </button>
         </form>
@@ -236,15 +195,38 @@ export function StudentArea() {
               {profile.status === "pending"
                 ? "ستراجع الإدارة طلبك. لا يتاح المحتوى المقيد قبل القبول وتأكيد البريد."
                 : profile.status === "approved"
-                  ? "يمكنك الاطّلاع على المحتوى المنشور بعد تأكيد بريدك."
+                  ? "تظهر البرامج التي تتيحها الإدارة لك بعد تأكيد بريدك والموافقة الحالية."
                   : "تواصل مع إدارة الأكاديمية للاستفسار عن حالة الطلب."}
             </p>
           </div>
         )
       )}
-      {profile?.status === "approved" && verified && (
-        <ApprovedContent user={user} />
+      {profile && profile.consentVersion !== PRIVACY_VERSION && (
+        <form
+          className="login-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const agreed =
+              new FormData(event.currentTarget).get("consent") === "on";
+            void action(
+              () => renewConsent(user, agreed),
+              "حُفظت موافقتك على الإصدار الحالي.",
+            );
+          }}
+        >
+          <h2>مراجعة سياسة الخصوصية</h2>
+          <ConsentCheckbox disabled={busy} />
+          <button
+            className="button button-primary"
+            disabled={busy || !isPrivacyApproved()}
+          >
+            حفظ الموافقة
+          </button>
+        </form>
       )}
+      {profile?.status === "approved" &&
+        profile.consentVersion === PRIVACY_VERSION &&
+        verified && <ApprovedContent user={user} />}
       <button
         className="button button-outline"
         disabled={busy}

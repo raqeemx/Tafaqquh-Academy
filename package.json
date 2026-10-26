@@ -9,8 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "playwright test",
-    "test:rules": "firebase emulators:exec --only auth,firestore --project tafaqquh-academy \"node --test --test-force-exit --test-concurrency=1 tests/security/*.test.mjs\"",
-    "emulators": "firebase emulators:start --only auth,firestore --project tafaqquh-academy"
+    "test:rules": "firebase emulators:exec --only auth,firestore --project demo-tafaqquh \"node --test --test-force-exit --test-concurrency=1 tests/security/*.test.mjs\"",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-tafaqquh"
   },
   "repository": {
     "type": "git",
@@ -47,7 +47,7 @@
   },
   "private": true,
   "engines": {
-    "node": "22.x"
+    "node": ">=24.12.0 <25"
   },
   "overrides": {
     "@grpc/grpc-js": "1.14.6"
