@@ -46,12 +46,23 @@ export function ContentManager({ user }: { user: User }) {
   }, [user]);
   useEffect(() => {
     let active = true;
-    void loadCatalog(user).then(result => { if(active){setEntries(result);setReady(true);} }).catch(e => {if(active)setMessage(e.message);});
+    void loadCatalog(user)
+      .then((result) => {
+        if (active) {
+          setEntries(result);
+          setReady(true);
+        }
+      })
+      .catch((e) => {
+        if (active) setMessage(e.message);
+      });
     void fetch("/api/settings")
       .then((r) => r.json())
       .then((d) => setZone(d.timeZone))
       .catch(() => {});
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [user]);
   async function task(work: () => Promise<void>) {
     if (busy) return;

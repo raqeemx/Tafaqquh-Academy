@@ -8,11 +8,12 @@ import {
 } from "@/lib/firebase/client";
 import { LoginForm } from "@/features/auth/login-form";
 import { AdminDashboard } from "./dashboard";
+import { DriveManager } from "./drive-manager";
 import { ContentManager } from "./content-manager";
 export function AdminArea({
   section = "students",
 }: {
-  section?: "students" | "content";
+  section?: "students" | "content" | "drive";
 }) {
   const ready = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
@@ -45,6 +46,7 @@ export function AdminArea({
         </section>
       </div>
     );
+  if (section === "drive") return <DriveManager key={user.uid} user={user} />;
   return section === "content" ? (
     <ContentManager key={user.uid} user={user} />
   ) : (
