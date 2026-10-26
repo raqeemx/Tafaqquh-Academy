@@ -1,4 +1,6 @@
 # Safe base. This file neither creates a backend nor authorizes deployment.
+scripts:
+  buildCommand: node scripts/block-deploy.mjs
 runConfig:
   minInstances: 0
   maxInstances: 2

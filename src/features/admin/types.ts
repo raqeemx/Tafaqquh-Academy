@@ -32,6 +32,9 @@ export const statusLabels: Record<string, string> = {
   suspended: "معلّق",
 };
 export const actionLabels: Record<string, string> = {
+  "catalog-create": "إنشاء محتوى",
+  "catalog-update": "تعديل محتوى",
+  "settings-update": "تعديل الإعدادات",
   approve: "قبول التسجيل",
   reject: "رفض التسجيل",
   suspend: "تعليق الوصول",

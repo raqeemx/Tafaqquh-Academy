@@ -8,7 +8,12 @@ import {
 } from "@/lib/firebase/client";
 import { LoginForm } from "@/features/auth/login-form";
 import { AdminDashboard } from "./dashboard";
-export function AdminArea() {
+import { ContentManager } from "./content-manager";
+export function AdminArea({
+  section = "students",
+}: {
+  section?: "students" | "content";
+}) {
   const ready = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(ready);
@@ -40,5 +45,9 @@ export function AdminArea() {
         </section>
       </div>
     );
-  return <AdminDashboard key={user.uid} user={user} />;
+  return section === "content" ? (
+    <ContentManager key={user.uid} user={user} />
+  ) : (
+    <AdminDashboard key={user.uid} user={user} />
+  );
 }

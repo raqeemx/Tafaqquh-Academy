@@ -28,6 +28,8 @@ import {
   type StudentRow,
 } from "./types";
 
+import { AdminNavigation } from "./navigation";
+
 class RequestError extends Error {
   constructor(
     public status: number,
@@ -36,12 +38,12 @@ class RequestError extends Error {
     super(message);
   }
 }
-function date(value: string | null) {
+function date(value: string | null, timeZone: string) {
   return value
     ? new Intl.DateTimeFormat("ar", {
         dateStyle: "medium",
         timeStyle: "short",
-        timeZone: "Asia/Baghdad",
+        timeZone,
       }).format(new Date(value))
     : "غير مسجّل";
 }
@@ -53,6 +55,13 @@ type Detail = {
   enrollments: string[];
 };
 export function AdminDashboard({ user }: { user: User }) {
+  const [timeZone, setTimeZone] = useState("Asia/Baghdad");
+  useEffect(() => {
+    void fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => setTimeZone(d.timeZone))
+      .catch(() => {});
+  }, []);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [next, setNext] = useState<string | null>(null);
@@ -240,6 +249,7 @@ export function AdminDashboard({ user }: { user: User }) {
     detail.student.consentVersion === PRIVACY_VERSION;
   return (
     <div className="container admin-shell">
+      <AdminNavigation />
       <div className="admin-heading">
         <div>
           <span className="eyebrow">
@@ -257,7 +267,7 @@ export function AdminDashboard({ user }: { user: User }) {
       </div>
       <p className="admin-session">
         <bdi>{user.email}</bdi>
-        <span>التوقيت المعروض: بغداد</span>
+        <span>التوقيت المعروض: {timeZone}</span>
       </p>
       <div role="status" className={message ? "notice admin-feedback" : ""}>
         {message}
@@ -419,7 +429,7 @@ export function AdminDashboard({ user }: { user: User }) {
                             <bdi className="student-email">{student.email}</bdi>
                           </td>
                           <td data-label="التاريخ">
-                            {date(student.createdAt)}
+                            {date(student.createdAt, timeZone)}
                           </td>
                           <td data-label="الحالة">
                             <span
@@ -476,7 +486,7 @@ export function AdminDashboard({ user }: { user: User }) {
                         <strong>
                           {actionLabels[entry.action] ?? entry.action}
                         </strong>
-                        <time>{date(entry.at)}</time>
+                        <time>{date(entry.at, timeZone)}</time>
                       </div>
                       <p>
                         المسؤول: <bdi>{entry.actorEmail || entry.actorUid}</bdi>
@@ -558,7 +568,7 @@ export function AdminDashboard({ user }: { user: User }) {
               </div>
               <div>
                 <dt>تاريخ التسجيل</dt>
-                <dd>{date(detail.student.createdAt)}</dd>
+                <dd>{date(detail.student.createdAt, timeZone)}</dd>
               </div>
             </dl>
             <p className="quiet">
