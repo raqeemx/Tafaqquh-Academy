@@ -7,3 +7,12 @@ out/
 playwright-report/
 test-results/
 .DS_Store
+
+# Credentials and local emulator state
+*service-account*.json
+*serviceAccount*.json
+*firebase-adminsdk*.json
+*.pem
+*.key
+.firebase/
+*-debug.log

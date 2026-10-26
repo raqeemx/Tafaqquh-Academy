@@ -1,0 +1,7 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // No files are served yet. Do not store public download URLs for protected lessons.
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}
