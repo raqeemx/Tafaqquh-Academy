@@ -193,6 +193,7 @@ export async function libraryFlow({
   }
   // Obtain a live recording cookie, not a token sent in JS or an Authorization header.
   await page.getByRole("button", { name: "فتح التسجيل / تجديد الإذن" }).click();
+  await expect(page.locator("audio")).toHaveAttribute("src", `/api/student/recordings/${lessonId}`);
   const oldCookie = (await page.context().cookies()).find(
     (c) => c.name === "academy_media",
   );
