@@ -116,6 +116,10 @@ if (
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
   const errors = validateStaging(process.env);
+  if ((process.env.APP_ENV && process.env.APP_ENV !== "local") || process.env.K_SERVICE || process.env.FIREBASE_APP_HOSTING === "true")
+    errors.push(
+      "Cloud builds require a separately reviewed deployment approval change.",
+    );
   if (errors.length) {
     console.error(errors.join("\n"));
     process.exitCode = 1;

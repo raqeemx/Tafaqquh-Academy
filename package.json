@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "playwright test",
     "test:rules": "firebase emulators:exec --only auth,firestore --project demo-tafaqquh \"node --test --test-force-exit --test-concurrency=1 tests/security/*.test.mjs\"",
-    "emulators": "firebase emulators:start --only auth,firestore --project demo-tafaqquh"
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-tafaqquh",
+    "deploy": "node scripts/block-deploy.mjs"
   },
   "repository": {
     "type": "git",

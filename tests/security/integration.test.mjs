@@ -1,3 +1,4 @@
+import {catalogFlow} from "./catalog-flow.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
@@ -488,6 +489,7 @@ test(
       await expect(
         page.getByRole("heading", { name: "طلبك قيد المراجعة" }),
       ).toBeVisible();
+      await catalogFlow({api,adminToken,studentToken:await signInToken(email),admin,origin,db});
       assert.deepEqual(errors, []);
     } catch (error) {
       console.error(logs.slice(-7000));

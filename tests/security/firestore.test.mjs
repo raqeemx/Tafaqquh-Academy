@@ -250,6 +250,8 @@ test("administrator registry, private reasons and audit cannot be read or writte
     "studentAdministration/student-a",
     "admissionAudit/event",
     "system/administratorBootstrap",
+    "catalog/private-lesson",
+    "settings/public",
   ]) {
     await assertFails(setDoc(doc(db, path), { active: true, role: "admin" }));
     await assertFails(getDoc(doc(db, path)));
