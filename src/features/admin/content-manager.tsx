@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { signOut, type User } from "firebase/auth";
-import { getFirebaseServices } from "@/lib/firebase/client";
+import { type User } from "firebase/auth";
+import { academySignOut } from "@/lib/firebase/sign-out";
 import {
   kinds,
   labels,
@@ -46,12 +46,23 @@ export function ContentManager({ user }: { user: User }) {
   }, [user]);
   useEffect(() => {
     let active = true;
-    void loadCatalog(user).then(result => { if(active){setEntries(result);setReady(true);} }).catch(e => {if(active)setMessage(e.message);});
+    void loadCatalog(user)
+      .then((result) => {
+        if (active) {
+          setEntries(result);
+          setReady(true);
+        }
+      })
+      .catch((e) => {
+        if (active) setMessage(e.message);
+      });
     void fetch("/api/settings")
       .then((r) => r.json())
       .then((d) => setZone(d.timeZone))
       .catch(() => {});
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [user]);
   async function task(work: () => Promise<void>) {
     if (busy) return;
@@ -118,7 +129,7 @@ export function ContentManager({ user }: { user: User }) {
         </div>
         <button
           className="button button-outline"
-          onClick={() => void signOut(getFirebaseServices().auth)}
+          onClick={() => void academySignOut()}
         >
           تسجيل الخروج
         </button>
