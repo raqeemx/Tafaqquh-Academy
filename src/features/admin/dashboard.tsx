@@ -6,7 +6,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { signOut, type User } from "firebase/auth";
+import { type User } from "firebase/auth";
 import {
   Clock3,
   CheckCircle2,
@@ -18,7 +18,7 @@ import {
   X,
   ShieldCheck,
 } from "lucide-react";
-import { getFirebaseServices } from "@/lib/firebase/client";
+import { academySignOut } from "@/lib/firebase/sign-out";
 import { PRIVACY_VERSION } from "@/lib/privacy/policy";
 import {
   actionLabels,
@@ -260,7 +260,7 @@ export function AdminDashboard({ user }: { user: User }) {
         </div>
         <button
           className="button button-outline"
-          onClick={() => void run(() => signOut(getFirebaseServices().auth))}
+          onClick={() => void run(() => academySignOut())}
         >
           <LogOut size={17} /> تسجيل الخروج
         </button>

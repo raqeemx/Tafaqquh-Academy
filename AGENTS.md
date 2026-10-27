@@ -22,3 +22,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+- Drive integrations are read-only and disabled until explicitly authorized. Never expose source file IDs, Drive URLs or provider credentials to students. Mock Drive only with demo-tafaqquh emulators; retain per-request playback authorization and bounded ranges. Do not deploy or create staging/cloud resources for educational feature work.

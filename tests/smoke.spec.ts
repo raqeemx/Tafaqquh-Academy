@@ -59,6 +59,7 @@ for (const width of [390, 1280]) {
       "/privacy",
       "/admin/content",
       "/admin/library",
+      "/student/library",
     ]) {
       expect((await page.goto(route))?.status()).toBe(200);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
