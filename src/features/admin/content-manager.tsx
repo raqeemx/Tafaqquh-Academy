@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { signOut, type User } from "firebase/auth";
-import { getFirebaseServices } from "@/lib/firebase/client";
+import { type User } from "firebase/auth";
+import { academySignOut } from "@/lib/firebase/sign-out";
 import {
   kinds,
   labels,
@@ -129,7 +129,7 @@ export function ContentManager({ user }: { user: User }) {
         </div>
         <button
           className="button button-outline"
-          onClick={() => void signOut(getFirebaseServices().auth)}
+          onClick={() => void academySignOut()}
         >
           تسجيل الخروج
         </button>
