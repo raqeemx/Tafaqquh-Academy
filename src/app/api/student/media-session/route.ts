@@ -55,7 +55,7 @@ export async function DELETE(request: Request) {
     return json({ error: "مصدر غير مسموح." }, 403);
   // Legacy callers follow 307 with DELETE preserved; the browser then sends the scoped cookie.
   const r = NextResponse.redirect(
-    new URL("/api/student/recordings", request.url),
+    new URL("/api/student/recordings", expected),
     307,
   );
   r.headers.set("Cache-Control", "private, no-store");
