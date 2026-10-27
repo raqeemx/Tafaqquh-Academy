@@ -27,6 +27,9 @@ export async function GET(request: Request) {
     for (const doc of docs) {
       if (!(await visibleEntry(db, doc, id, cache))) continue;
       const d = doc.data();
+      const asset = safeId(d.assetId)
+        ? (await db.doc(`driveAssets/${d.assetId}`).get()).data()
+        : undefined;
       let completed = false;
       if (d.kind === "lesson" && program.data()?.progressEnabled === true) {
         const p = await db
@@ -43,6 +46,11 @@ export async function GET(request: Request) {
         order: d.order ?? 0,
         lessonDate: d.lessonDate ?? "",
         hasRecording: !!d.assetId,
+        mediaKind: asset?.mimeType?.startsWith("audio/")
+          ? "audio"
+          : asset?.mimeType?.startsWith("video/")
+            ? "video"
+            : null,
         completed,
       });
     }

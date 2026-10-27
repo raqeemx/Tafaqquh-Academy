@@ -5,6 +5,8 @@ export function recordingRange(header: string | null, size: number) {
   if (header) {
     const m = /^bytes=(\d*)-(\d*)$/.exec(header);
     if (!m || (!m[1] && !m[2])) throw new Error("range");
+    if ([m[1], m[2]].some((v) => v && !Number.isSafeInteger(Number(v))))
+      throw new Error("range");
     if (!m[1]) {
       const suffix = Number(m[2]);
       if (suffix < 1) throw new Error("range");

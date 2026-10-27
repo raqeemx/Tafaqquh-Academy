@@ -8,6 +8,8 @@ import {
   safeId,
 } from "@/lib/server/api";
 import { lessonAccess } from "@/lib/server/library";
+import { MEDIA_SESSION_MS } from "@/lib/drive/policy";
+import { chargePlayback } from "@/lib/server/playback-budget";
 export const dynamic = "force-dynamic";
 const options = {
   httpOnly: true,
@@ -28,18 +30,17 @@ export async function POST(request: Request) {
     )
       throw new ApiError(400, "اختر درسًا.");
     const { lesson } = await lessonAccess(db, token.uid, b.lessonId);
+    await chargePlayback(db, token.uid, 0, 1);
     if (!safeId(lesson.data()?.assetId))
       throw new ApiError(404, "لم يُربط تسجيل بهذا الدرس.");
     const secret = randomBytes(32).toString("hex");
     const hash = createHash("sha256").update(secret).digest("hex");
-    await db
-      .doc(`mediaSessions/${hash}`)
-      .set({
-        uid: token.uid,
-        lessonId: b.lessonId,
-        authTime: token.auth_time,
-        expiresAt: Date.now() + 300000,
-      });
+    await db.doc(`mediaSessions/${hash}`).set({
+      uid: token.uid,
+      lessonId: b.lessonId,
+      authTime: token.auth_time,
+      expiresAt: Date.now() + MEDIA_SESSION_MS,
+    });
     const r = json({ url: `/api/student/recordings/${b.lessonId}` });
     r.cookies.set("academy_media", secret, options);
     return r;

@@ -9,6 +9,7 @@ import {
 } from "@/lib/firebase/client";
 import { labels, type Kind } from "@/lib/catalog/model";
 import { adminCall as request } from "@/features/admin/client-api";
+import { RecordingPlayer } from "./recording-player";
 type Item = {
   id: string;
   kind: Kind;
@@ -18,6 +19,7 @@ type Item = {
   order: number;
   lessonDate: string;
   hasRecording: boolean;
+  mediaKind: "audio" | "video" | null;
   completed: boolean;
 };
 export function LibraryArea() {
@@ -311,12 +313,10 @@ function LibraryView({ user }: { user: User }) {
                     فتح التسجيل / تجديد الإذن
                   </button>
                   {url && (
-                    <video
+                    <RecordingPlayer
                       key={url}
-                      src={url}
-                      controls
-                      preload="metadata"
-                      className="library-player"
+                      url={url}
+                      kind={lesson.mediaKind}
                       onError={() =>
                         setError(
                           "تعذّر تشغيل التسجيل. جرّب تجديد الإذن؛ قد يكون المصدر غير مهيأ أو إذنه غير متاح.",

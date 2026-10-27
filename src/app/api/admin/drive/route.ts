@@ -22,6 +22,7 @@ import {
   folderMime,
 } from "@/lib/drive/provider";
 import { lessonNumber, titleFromFile } from "@/lib/drive/names";
+import { scanExpiresAt, SCAN_RETENTION_MS } from "@/lib/drive/policy";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
@@ -37,6 +38,11 @@ export async function GET(request: Request) {
     const scan = await db.doc(`driveScans/${id}`).get();
     if (scan.data()?.actorUid !== token.uid)
       throw new ApiError(403, "المعاينة خاصة بالمسؤول الذي أنشأها.");
+    if (scanExpiresAt(scan.data()) <= Date.now())
+      throw new ApiError(
+        410,
+        "انتهت المعاينة بعد سبعة أيام؛ ابدأ معاينة جديدة.",
+      );
     let q = db
       .collection(`driveScans/${id}/candidates`)
       .orderBy(FieldPath.documentId())
@@ -95,6 +101,7 @@ export async function POST(request: Request) {
           done: false,
           count: 0,
           createdAt: FieldValue.serverTimestamp(),
+          expiresAt: Date.now() + SCAN_RETENTION_MS,
         });
       });
       return json({ ok: true, scanId: b.scanId });
@@ -105,6 +112,8 @@ export async function POST(request: Request) {
     const s = scan.data();
     if (!s || s.actorUid !== token.uid)
       throw new ApiError(403, "معاينة غير متاحة.");
+    if (scanExpiresAt(s) <= Date.now())
+      throw new ApiError(410, "انتهت صلاحية المعاينة.");
     await allowedRoot(s.rootId);
     if (b.action === "step") {
       if (s.done) return json({ ok: true, done: true });
@@ -168,6 +177,8 @@ export async function POST(request: Request) {
           throw new ApiError(403, "غير مخوّل.");
         if (version(current) !== version(scan))
           throw new ApiError(409, "تقدمت المعاينة؛ حدّثها.");
+        if (scanExpiresAt(current.data()) <= Date.now())
+          throw new ApiError(410, "انتهت صلاحية المعاينة.");
         for (const item of candidates)
           tx.set(scanRef.collection("candidates").doc(item.fileId), item);
         tx.update(scanRef, {
@@ -208,6 +219,8 @@ export async function POST(request: Request) {
         );
       if (admin.data()?.active !== true || admin.data()?.role !== "admin")
         throw new ApiError(403, "غير مخوّل.");
+      if (scanExpiresAt(current.data()) <= Date.now())
+        throw new ApiError(410, "انتهت صلاحية المعاينة.");
       if (
         current.data()?.actorUid !== token.uid ||
         !current.data()?.done ||

@@ -1,5 +1,5 @@
 import "server-only";
-import { GoogleAuth } from "google-auth-library";
+import { driveAccessToken } from "./auth";
 import { ApiError, safeId } from "@/lib/server/api";
 export const folderMime = "application/vnd.google-apps.folder";
 export type DriveFile = {
@@ -88,34 +88,39 @@ export function driveRoots() {
     throw new ApiError(503, "قائمة مجلدات Drive المسموحة غير مهيأة.");
   return roots;
 }
-async function driveFetch(path: string, media = false, headers?: HeadersInit) {
+async function driveFetch(
+  path: string,
+  media = false,
+  headers?: HeadersInit,
+  signal?: AbortSignal,
+) {
   driveRoots();
   if (media && process.env.DRIVE_MEDIA_ENABLED !== "true")
     throw new ApiError(503, "تشغيل التسجيلات لم يُفعّل بعد.");
-  const auth = new GoogleAuth({
-    scopes: [
-      `https://www.googleapis.com/auth/drive.${media ? "readonly" : "metadata.readonly"}`,
-    ],
-  });
-  const client = await auth.getClient();
-  const token = await client.getAccessToken();
-  if (!token.token) throw new ApiError(503, "تعذّر الحصول على اعتماد Drive.");
+  const token = await driveAccessToken(media);
   const r = await fetch(`https://www.googleapis.com/drive/v3/${path}`, {
-    headers: { ...headers, Authorization: `Bearer ${token.token}` },
+    headers: { ...headers, Authorization: `Bearer ${token}` },
     cache: "no-store",
     redirect: "error",
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.any([
+      AbortSignal.timeout(media ? 90000 : 25000),
+      ...(signal ? [signal] : []),
+    ]),
   });
-  if (!r.ok)
+  if (!r.ok) {
+    await r.body?.cancel();
     throw new ApiError(
-      r.status === 404 || r.status === 403 ? 403 : 503,
+      r.status === 429 ? 429 : r.status === 404 || r.status === 403 ? 403 : 503,
       "تعذّرت قراءة الملف أو أن إذن Drive غير متاح.",
     );
+  }
   return r;
 }
 export async function driveFile(id: string): Promise<DriveFile> {
   if (!safeId(id)) throw new ApiError(400, "معرف Drive غير صالح.");
   if (isMockDrive()) {
+    if (id === "mock-large")
+      return { ...fixture[3], id, size: String(12 * 1024 ** 3) };
     const f = fixture.find((f) => f.id === id);
     if (!f) throw new ApiError(404, "ملف غير موجود.");
     return f;
@@ -167,7 +172,12 @@ export async function allowedRoot(id: string) {
   for (const root of driveRoots()) if (await withinRoot(id, root)) return;
   throw new ApiError(403, "المجلد خارج النطاق المسموح.");
 }
-export async function driveMedia(id: string, start: number, end: number) {
+export async function driveMedia(
+  id: string,
+  start: number,
+  end: number,
+  signal?: AbortSignal,
+) {
   if (isMockDrive()) {
     const bytes = Buffer.alloc(76);
     bytes.write("RIFF");
@@ -182,9 +192,17 @@ export async function driveMedia(id: string, start: number, end: number) {
     bytes.writeUInt16LE(16, 34);
     bytes.write("data", 36);
     bytes.writeUInt32LE(32, 40);
-    return new Response(bytes.subarray(start, end + 1), { status: 206 });
+    return new Response(bytes.subarray(start, end + 1), {
+      status: 206,
+      headers: { "Content-Range": `bytes ${start}-${end}/76` },
+    });
   }
-  return driveFetch(`files/${id}?alt=media&supportsAllDrives=true`, true, {
-    Range: `bytes=${start}-${end}`,
-  });
+  return driveFetch(
+    `files/${id}?alt=media&supportsAllDrives=true`,
+    true,
+    {
+      Range: `bytes=${start}-${end}`,
+    },
+    signal,
+  );
 }

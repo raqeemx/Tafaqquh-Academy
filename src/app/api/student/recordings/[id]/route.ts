@@ -8,9 +8,11 @@ import {
   withinRoot,
   driveFile,
   driveMedia,
-  isMockDrive,
 } from "@/lib/drive/provider";
 import { recordingRange } from "@/lib/drive/range";
+import { checkedMedia } from "@/lib/drive/stream";
+import { playbackLimits } from "@/lib/drive/policy";
+import { chargePlayback } from "@/lib/server/playback-budget";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function GET(
@@ -27,7 +29,12 @@ export async function GET(
       .get();
     const s = session.data();
     const { id } = await context.params;
-    if (!s || s.expiresAt <= Date.now() || s.lessonId !== id)
+    if (
+      !s ||
+      !Number.isFinite(s.expiresAt) ||
+      s.expiresAt <= Date.now() ||
+      s.lessonId !== id
+    )
       throw new ApiError(401, "انتهى إذن التشغيل. أعد فتح التسجيل.");
     const account = await auth.getUser(s.uid);
     if (
@@ -40,6 +47,7 @@ export async function GET(
     )
       throw new ApiError(403, "الحساب غير متاح.");
     const { lesson } = await lessonAccess(db, s.uid, id);
+    await chargePlayback(db, s.uid, 0, 1);
     const assetId = lesson.data()?.assetId;
     if (!safeId(assetId)) throw new ApiError(404, "التسجيل غير متاح.");
     const asset = await db.doc(`driveAssets/${assetId}`).get();
@@ -56,6 +64,11 @@ export async function GET(
     )
       throw new ApiError(403, "لا يسمح مصدر التسجيل بالقراءة.");
     const size = Number(file.size);
+    if (size > playbackLimits().fileBytes)
+      throw new ApiError(
+        413,
+        "التسجيل يتجاوز حد الحجم المسموح؛ تواصل مع الإدارة.",
+      );
     let range;
     try {
       range = recordingRange(request.headers.get("range"), size);
@@ -68,30 +81,15 @@ export async function GET(
         },
       });
     }
-    const media = await driveMedia(a.fileId, range.start, range.end);
-    const expected = `bytes ${range.start}-${range.end}/${size}`;
-    if (
-      !media.body ||
-      (!isMockDrive() &&
-        (media.status !== 206 ||
-          media.headers.get("content-range") !== expected))
-    ) {
-      await media.body?.cancel();
-      throw new ApiError(503, "تعذّر التحقق من نطاق التسجيل.");
-    }
-    let bytes = 0;
-    const body = media.body.pipeThrough(
-      new TransformStream<Uint8Array, Uint8Array>({
-        transform(chunk, controller) {
-          bytes += chunk.byteLength;
-          if (bytes > range.end - range.start + 1) {
-            controller.error(new Error("range-overflow"));
-            return;
-          }
-          controller.enqueue(chunk);
-        },
-      }),
+    await chargePlayback(db, s.uid, range.end - range.start + 1, 0);
+    const media = await driveMedia(
+      a.fileId,
+      range.start,
+      range.end,
+      request.signal,
     );
+    const expected = `bytes ${range.start}-${range.end}/${size}`;
+    const body = await checkedMedia(media, range.start, range.end, size);
     return new Response(body, {
       status: 206,
       headers: {
@@ -106,6 +104,12 @@ export async function GET(
       },
     });
   } catch (e) {
-    return failure(e);
+    const response = failure(e);
+    if (e instanceof ApiError && e.status === 429)
+      response.headers.set(
+        "Retry-After",
+        String(3600 - (Math.floor(Date.now() / 1000) % 3600)),
+      );
+    return response;
   }
 }

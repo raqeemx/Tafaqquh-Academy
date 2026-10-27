@@ -23,14 +23,12 @@ export async function libraryFlow({
   await enrollment.set({ active: true });
   await db.doc("catalog/" + lessonId).update({ published: true });
   const original = (await db.doc("catalog/" + lessonId).get()).data();
-  await db
-    .doc("catalog/next-lesson")
-    .set({
-      ...original,
-      assetId: null,
-      title: "الدرس التالي للاختبار",
-      order: 10,
-    });
+  await db.doc("catalog/next-lesson").set({
+    ...original,
+    assetId: "video-fixture",
+    title: "الدرس التالي للاختبار",
+    order: 10,
+  });
   const library = () =>
     api("/api/student/library?programId=program-local", studentToken);
   const list = await (await library()).json();
@@ -91,6 +89,7 @@ export async function libraryFlow({
     fetch(origin + "/api/student/recordings/" + id, {
       headers: { Cookie: cookieValue, Range: "bytes=0-15" },
     });
+  await db.doc("driveAssets/video-fixture").set({ mimeType: "video/mp4" });
   assert.equal(
     (await fetch(origin + "/api/student/recordings/" + lessonId)).status,
     401,
@@ -136,9 +135,19 @@ export async function libraryFlow({
     page.getByRole("heading", { name: "عنوان حافظ عليه" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "فتح التسجيل / تجديد الإذن" }).click();
-  await expect(page.locator("video")).toHaveAttribute(
+  await expect(page.locator("audio")).toHaveAttribute(
     "src",
     /\/api\/student\/recordings\//,
+  );
+  const playback = page.waitForResponse(
+    (r) => r.url().includes("/api/student/recordings/") && r.status() === 206,
+  );
+  await page.locator("audio").evaluate(async (audio) => {
+    await audio.play();
+  });
+  await playback;
+  assert.ok(
+    await page.locator("audio").evaluate((audio) => audio.duration > 0),
   );
   await expect(
     page.getByRole("button", { name: "مسح علامة الإتمام" }),
@@ -147,6 +156,9 @@ export async function libraryFlow({
   await expect(
     page.getByRole("heading", { name: "الدرس التالي للاختبار" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "فتح التسجيل / تجديد الإذن" }).click();
+  await expect(page.getByLabel("مشغّل الدرس المرئي")).toBeVisible();
+  await expect(page.locator("audio")).toHaveCount(0);
   await page.getByRole("button", { name: "الدرس السابق", exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(

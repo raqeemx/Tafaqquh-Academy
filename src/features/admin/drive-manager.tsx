@@ -143,6 +143,33 @@ export function DriveManager({ user }: { user: User }) {
         نقرأ المجلدات والتسجيلات فقط. لا نحذف الملفات ولا ننقلها ولا نغير
         صلاحياتها. جميع الدروس الجديدة مسودات حتى تعتمد نشرها.
       </p>
+      <details className="notice">
+        <summary>سياسة الاحتفاظ وتنظيف المكتبة</summary>
+        <p>
+          تنتهي المعاينات بعد ٧ أيام وأذونات التشغيل بعد ٥ دقائق. التنظيف يحذف
+          السجلات المنتهية على دفعات، ولا يحذف الدروس المعتمدة أو ملفات Drive.
+        </p>
+        <button
+          className="button button-outline"
+          disabled={busy}
+          onClick={() =>
+            void task(async () => {
+              const r = await adminCall<{
+                sessions: number;
+                candidates: number;
+                scans: number;
+                usage: number;
+                mayHaveMore: boolean;
+              }>(user, "/api/admin/library-maintenance", { action: "cleanup" });
+              setMessage(
+                `حُذف ${r.sessions} إذن تشغيل و${r.candidates} عنصر معاينة و${r.scans} معاينة و${r.usage} سجل استهلاك.${r.mayHaveMore ? " اضغط مجددًا لاستكمال الدفعات إن وجدت." : " اكتملت الدفعة."}`,
+              );
+            })
+          }
+        >
+          تنظيف السجلات المنتهية
+        </button>
+      </details>
       {message && (
         <p className="notice" role="status">
           {message}

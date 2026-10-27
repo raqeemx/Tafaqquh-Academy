@@ -1,4 +1,5 @@
 import { libraryFlow } from "./library-flow.mjs";
+import { hardeningFlow } from "./hardening-flow.mjs";
 import { driveFlow } from "./drive-flow.mjs";
 import { catalogFlow } from "./catalog-flow.mjs";
 import { test } from "node:test";
@@ -109,8 +110,20 @@ test(
     try {
       let started = false;
       for (let i = 0; i < 100; i++) {
+        assert.equal(
+          server.exitCode,
+          null,
+          "The owned test server exited; never reuse an old server",
+        );
         try {
-          if ((await fetch(origin + "/login")).ok) {
+          if (
+            logs.includes("Ready") &&
+            (
+              await fetch(origin + "/login", {
+                signal: AbortSignal.timeout(5000),
+              })
+            ).ok
+          ) {
             started = true;
             break;
           }
@@ -514,6 +527,15 @@ test(
         auth,
       });
       assert.deepEqual(errors, []);
+      await hardeningFlow({
+        api,
+        adminToken,
+        studentToken: await signInToken(email),
+        student,
+        lessonId: importedLessonId,
+        db,
+        origin,
+      });
     } catch (error) {
       console.error(logs.slice(-7000));
       throw error;

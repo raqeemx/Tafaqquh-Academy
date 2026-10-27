@@ -255,6 +255,7 @@ test("administrator registry, private reasons and audit cannot be read or writte
     "driveScans/private",
     "driveAssets/private",
     "mediaSessions/private",
+    "playbackUsage/private",
     "students/student-a/progress/private",
   ]) {
     await assertFails(setDoc(doc(db, path), { active: true, role: "admin" }));
