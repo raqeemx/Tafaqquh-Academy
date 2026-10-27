@@ -228,7 +228,7 @@ export async function libraryFlow({
     }),
   );
   await page.getByRole("button", { name: "تسجيل الخروج", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("لم يكتمل تسجيل الخروج");
+  await expect(page.getByRole("alert").filter({ hasText: "لم يكتمل تسجيل الخروج" })).toBeVisible();
   assert.ok(
     (await page.context().cookies()).some((c) => c.name === "academy_media"),
   );
