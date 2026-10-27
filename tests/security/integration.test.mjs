@@ -1,4 +1,6 @@
-import {catalogFlow} from "./catalog-flow.mjs";
+import { libraryFlow } from "./library-flow.mjs";
+import { driveFlow } from "./drive-flow.mjs";
+import { catalogFlow } from "./catalog-flow.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
@@ -39,6 +41,7 @@ test(
         env: {
           ...process.env,
           NODE_ENV: "development",
+          DRIVE_PROVIDER: "mock",
           APP_ENV: "local",
           NEXT_PUBLIC_APP_ENV: "local",
           APP_ORIGIN: origin,
@@ -130,22 +133,18 @@ test(
       await db
         .doc("programs/beta")
         .set({ published: true, title: "برنامج محلي باء — للاختبار فقط" });
-      await db
-        .doc("restrictedContent/alpha")
-        .set({
-          programId: "alpha",
-          published: true,
-          title: "مادة اختبار ألف",
-          body: "نص اصطناعي للاختبار، ليس مادة للشيخ.",
-        });
-      await db
-        .doc("restrictedContent/beta")
-        .set({
-          programId: "beta",
-          published: true,
-          title: "مادة اختبار باء",
-          body: "نص اصطناعي.",
-        });
+      await db.doc("restrictedContent/alpha").set({
+        programId: "alpha",
+        published: true,
+        title: "مادة اختبار ألف",
+        body: "نص اصطناعي للاختبار، ليس مادة للشيخ.",
+      });
+      await db.doc("restrictedContent/beta").set({
+        programId: "beta",
+        published: true,
+        title: "مادة اختبار باء",
+        body: "نص اصطناعي.",
+      });
       browser = await chromium.launch(
         process.env.PLAYWRIGHT_CHANNEL
           ? { channel: process.env.PLAYWRIGHT_CHANNEL }
@@ -428,18 +427,16 @@ test(
         password,
         emailVerified: true,
       });
-      await db
-        .doc(`students/${second.uid}`)
-        .set({
-          uid: second.uid,
-          email: second.email,
-          displayName: "طلب اختبار آخر",
-          status: "pending",
-          consentVersion: "2026-10-26.v1",
-          consentedAt: FieldValue.serverTimestamp(),
-          createdAt: FieldValue.serverTimestamp(),
-          updatedAt: FieldValue.serverTimestamp(),
-        });
+      await db.doc(`students/${second.uid}`).set({
+        uid: second.uid,
+        email: second.email,
+        displayName: "طلب اختبار آخر",
+        status: "pending",
+        consentVersion: "2026-10-26.v1",
+        consentedAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
       const secondDetail = await (
         await api(`/api/admin/students/${second.uid}`, adminToken)
       ).json();
@@ -489,7 +486,33 @@ test(
       await expect(
         page.getByRole("heading", { name: "طلبك قيد المراجعة" }),
       ).toBeVisible();
-      await catalogFlow({api,adminToken,studentToken:await signInToken(email),admin,origin,db});
+      await catalogFlow({
+        api,
+        adminToken,
+        studentToken: await signInToken(email),
+        admin,
+        origin,
+        db,
+      });
+      const importedLessonId = await driveFlow({
+        api,
+        adminToken,
+        studentToken: await signInToken(email),
+        admin,
+        origin,
+        db,
+      });
+      await libraryFlow({
+        api,
+        studentToken: await signInToken(email),
+        student,
+        lessonId: importedLessonId,
+        page,
+        admin,
+        origin,
+        db,
+        auth,
+      });
       assert.deepEqual(errors, []);
     } catch (error) {
       console.error(logs.slice(-7000));

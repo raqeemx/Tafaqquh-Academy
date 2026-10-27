@@ -32,6 +32,8 @@ export const statusLabels: Record<string, string> = {
   suspended: "معلّق",
 };
 export const actionLabels: Record<string, string> = {
+  "drive-import": "استيراد تسجيل",
+  "drive-sync": "مزامنة فهرس تسجيل",
   "catalog-create": "إنشاء محتوى",
   "catalog-update": "تعديل محتوى",
   "settings-update": "تعديل الإعدادات",

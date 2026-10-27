@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
+import { academySignOut } from "@/lib/firebase/sign-out";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   onAuthStateChanged,
   reload,
   sendEmailVerification,
-  signOut,
   type User,
 } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -226,11 +226,18 @@ export function StudentArea() {
       )}
       {profile?.status === "approved" &&
         profile.consentVersion === PRIVACY_VERSION &&
-        verified && <ApprovedContent user={user} />}
+        verified && (
+          <>
+            <Link className="button button-primary" href="/student/library">
+              تصفح المكتبة العلمية
+            </Link>
+            <ApprovedContent user={user} />
+          </>
+        )}
       <button
         className="button button-outline"
         disabled={busy}
-        onClick={() => void action(() => signOut(getFirebaseServices().auth))}
+        onClick={() => void action(academySignOut)}
       >
         تسجيل الخروج
       </button>
