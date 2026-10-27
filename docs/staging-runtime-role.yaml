@@ -1,14 +1,14 @@
-# Proposed project-level custom role for the runtime identity; review in staging first.
+# Proposed custom role only. No IAM change or environment creation is authorized here.
+# See runtime-iam.md for database scoping, deletion paths and later verification.
 # Keep platform-managed App Hosting build/run roles separate and unchanged.
 title: Academy Runtime Data Access
-description: Read Auth users and transact on academy documents without deleting users or data.
+description: Read Auth users and read/write academy documents, including scoped application deletes. No Auth user deletion or database administration.
 stage: GA
 includedPermissions:
   - firebaseauth.users.get
   - datastore.databases.get
-  - datastore.databases.getMetadata
   - datastore.entities.get
   - datastore.entities.list
   - datastore.entities.create
   - datastore.entities.update
-  - resourcemanager.projects.get
+  - datastore.entities.delete

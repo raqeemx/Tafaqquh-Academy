@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { onAuthStateChanged, type User } from "firebase/auth";
+import { academySignOut } from "@/lib/firebase/sign-out";
 import { doc, collection, onSnapshot } from "firebase/firestore";
 import {
   getFirebaseServices,
@@ -233,10 +234,13 @@ function LibraryView({ user }: { user: User }) {
         </button>
         <button
           className="button button-outline"
+          disabled={busy}
           onClick={() => {
-            void fetch("/api/student/media-session", {
-              method: "DELETE",
-            }).finally(() => signOut(getFirebaseServices().auth));
+            setUrl("");
+            setBusy(true);
+            void academySignOut()
+              .catch((e) => setError(e.message))
+              .finally(() => setBusy(false));
           }}
         >
           تسجيل الخروج
