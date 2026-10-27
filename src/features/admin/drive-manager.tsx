@@ -29,6 +29,7 @@ export function DriveManager({ user }: { user: User }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
   const [message, setMessage] = useState("");
   const stop = useRef(false);
   useEffect(() => {
@@ -46,6 +47,7 @@ export function DriveManager({ user }: { user: User }) {
           setRootId(r.roots[0]?.id ?? "");
           setEntries(c);
           setScanId(sessionStorage.getItem(`drive-scan-${user.uid}`) ?? "");
+          setReady(true);
         }
       })
       .catch((e) => {
@@ -149,7 +151,11 @@ export function DriveManager({ user }: { user: User }) {
       <div className="catalog-editor login-form">
         <label>
           المجلد الرئيسي
-          <select value={rootId} onChange={(e) => setRootId(e.target.value)}>
+          <select
+            disabled={!ready || busy}
+            value={rootId}
+            onChange={(e) => setRootId(e.target.value)}
+          >
             {roots.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}
@@ -162,12 +168,13 @@ export function DriveManager({ user }: { user: User }) {
           <input
             dir="ltr"
             value={rootId}
+            disabled={!ready || busy}
             onChange={(e) => setRootId(e.target.value)}
           />
         </label>
         <div className="catalog-actions">
           <button
-            disabled={busy || !rootId}
+            disabled={!ready || busy || !rootId}
             className="button button-primary"
             onClick={() => void scan(true)}
           >
@@ -189,11 +196,12 @@ export function DriveManager({ user }: { user: User }) {
           <input
             dir="ltr"
             value={scanId}
+            disabled={!ready || busy}
             onChange={(e) => setScanId(e.target.value)}
           />
         </label>
         <button
-          disabled={busy || !scanId}
+          disabled={!ready || busy || !scanId}
           className="button button-outline"
           onClick={() => void scan(false)}
         >
