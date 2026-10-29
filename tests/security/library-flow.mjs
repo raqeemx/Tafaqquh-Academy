@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { expect } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -23,14 +24,12 @@ export async function libraryFlow({
   await enrollment.set({ active: true });
   await db.doc("catalog/" + lessonId).update({ published: true });
   const original = (await db.doc("catalog/" + lessonId).get()).data();
-  await db
-    .doc("catalog/next-lesson")
-    .set({
-      ...original,
-      assetId: null,
-      title: "الدرس التالي للاختبار",
-      order: 10,
-    });
+  await db.doc("catalog/next-lesson").set({
+    ...original,
+    assetId: "video-fixture",
+    title: "الدرس التالي للاختبار",
+    order: 10,
+  });
   const library = () =>
     api("/api/student/library?programId=program-local", studentToken);
   const list = await (await library()).json();
@@ -91,6 +90,7 @@ export async function libraryFlow({
     fetch(origin + "/api/student/recordings/" + id, {
       headers: { Cookie: cookieValue, Range: "bytes=0-15" },
     });
+  await db.doc("driveAssets/video-fixture").set({ mimeType: "video/mp4" });
   assert.equal(
     (await fetch(origin + "/api/student/recordings/" + lessonId)).status,
     401,
@@ -136,9 +136,19 @@ export async function libraryFlow({
     page.getByRole("heading", { name: "عنوان حافظ عليه" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "فتح التسجيل / تجديد الإذن" }).click();
-  await expect(page.locator("video")).toHaveAttribute(
+  await expect(page.locator("audio")).toHaveAttribute(
     "src",
     /\/api\/student\/recordings\//,
+  );
+  const playback = page.waitForResponse(
+    (r) => r.url().includes("/api/student/recordings/") && r.status() === 206,
+  );
+  await page.locator("audio").evaluate(async (audio) => {
+    await audio.play();
+  });
+  await playback;
+  assert.ok(
+    await page.locator("audio").evaluate((audio) => audio.duration > 0),
   );
   await expect(
     page.getByRole("button", { name: "مسح علامة الإتمام" }),
@@ -147,6 +157,9 @@ export async function libraryFlow({
   await expect(
     page.getByRole("heading", { name: "الدرس التالي للاختبار" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "فتح التسجيل / تجديد الإذن" }).click();
+  await expect(page.getByLabel("مشغّل الدرس المرئي")).toBeVisible();
+  await expect(page.locator("audio")).toHaveCount(0);
   await page.getByRole("button", { name: "الدرس السابق", exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(
@@ -178,11 +191,102 @@ export async function libraryFlow({
       fullPage: true,
     });
   }
+  // Obtain a live recording cookie, not a token sent in JS or an Authorization header.
+  await page.getByRole("button", { name: "فتح التسجيل / تجديد الإذن" }).click();
+  await expect(page.locator("audio")).toHaveAttribute("src", `/api/student/recordings/${lessonId}`);
+  const oldCookie = (await page.context().cookies()).find(
+    (c) => c.name === "academy_media",
+  );
+  assert.equal(oldCookie.path, "/api/student/recordings");
+  assert.equal(oldCookie.httpOnly, true);
+  const oldHash = createHash("sha256").update(oldCookie.value).digest("hex");
+  const replay = () =>
+    fetch(`${origin}/api/student/recordings/${lessonId}`, {
+      headers: {
+        Cookie: `academy_media=${oldCookie.value}`,
+        Range: "bytes=0-15",
+      },
+    });
+  const playable = await replay();
+  assert.equal(playable.status, 206);
+  await playable.arrayBuffer();
+  const forbidden = await fetch(origin + "/api/student/recordings", {
+    method: "DELETE",
+    headers: {
+      Origin: "https://untrusted.example",
+      Cookie: `academy_media=${oldCookie.value}`,
+    },
+  });
+  assert.equal(forbidden.status, 403);
+  assert.equal((await db.doc(`mediaSessions/${oldHash}`).get()).exists, true);
+  // A backend/IAM/network failure must not masquerade as a successful logout.
+  await page.route("**/api/student/recordings", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: '{"error":"test-only-unavailable"}',
+    }),
+  );
+  await page.getByRole("button", { name: "تسجيل الخروج", exact: true }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "لم يكتمل تسجيل الخروج" })).toBeVisible();
+  assert.ok(
+    (await page.context().cookies()).some((c) => c.name === "academy_media"),
+  );
+  await page.unroute("**/api/student/recordings");
   await page.getByRole("button", { name: "تسجيل الخروج", exact: true }).click();
   await expect(
     page.getByRole("link", { name: "تسجيل الدخول للمكتبة" }),
   ).toBeVisible();
   assert.ok(
     !(await page.context().cookies()).some((c) => c.name === "academy_media"),
+  );
+  assert.equal((await db.doc(`mediaSessions/${oldHash}`).get()).exists, false);
+  assert.equal(
+    (await replay()).status,
+    401,
+    "A copied pre-logout capability must no longer play",
+  );
+  const repeated = await fetch(origin + "/api/student/recordings", {
+    method: "DELETE",
+    headers: { Origin: origin, Cookie: `academy_media=${oldCookie.value}` },
+  });
+  assert.equal(repeated.status, 200);
+  assert.deepEqual(await repeated.json(), { ok: true });
+  // Old application tabs still calling /media-session must follow the redirect with scoped cookies.
+  const legacy = await api("/api/student/media-session", studentToken, {
+    lessonId,
+  });
+  const legacyValue = legacy.headers
+    .get("set-cookie")
+    .split(";")[0]
+    .split("=")[1];
+  await page
+    .context()
+    .addCookies([
+      {
+        name: "academy_media",
+        value: legacyValue,
+        domain: "127.0.0.1",
+        path: "/api/student/recordings",
+        httpOnly: true,
+        sameSite: "Strict",
+      },
+    ]);
+  const redirected = await page.evaluate(async () => {
+    const r = await fetch("/api/student/media-session", { method: "DELETE" });
+    return { status: r.status, url: r.url, redirected: r.redirected };
+  });
+  assert.equal(redirected.status, 200);
+  assert.equal(redirected.redirected, true);
+  assert.equal(redirected.url, origin + "/api/student/recordings");
+  assert.equal(
+    (
+      await db
+        .doc(
+          `mediaSessions/${createHash("sha256").update(legacyValue).digest("hex")}`,
+        )
+        .get()
+    ).exists,
+    false,
   );
 }

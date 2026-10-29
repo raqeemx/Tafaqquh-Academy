@@ -33,6 +33,7 @@ export const statusLabels: Record<string, string> = {
 };
 export const actionLabels: Record<string, string> = {
   "drive-import": "استيراد تسجيل",
+  "library-cleanup": "تنظيف سجلات المكتبة المنتهية",
   "drive-sync": "مزامنة فهرس تسجيل",
   "catalog-create": "إنشاء محتوى",
   "catalog-update": "تعديل محتوى",

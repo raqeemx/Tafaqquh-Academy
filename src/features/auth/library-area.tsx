@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { onAuthStateChanged, type User } from "firebase/auth";
+import { academySignOut } from "@/lib/firebase/sign-out";
 import { doc, collection, onSnapshot } from "firebase/firestore";
 import {
   getFirebaseServices,
@@ -9,6 +10,7 @@ import {
 } from "@/lib/firebase/client";
 import { labels, type Kind } from "@/lib/catalog/model";
 import { adminCall as request } from "@/features/admin/client-api";
+import { RecordingPlayer } from "./recording-player";
 type Item = {
   id: string;
   kind: Kind;
@@ -18,6 +20,7 @@ type Item = {
   order: number;
   lessonDate: string;
   hasRecording: boolean;
+  mediaKind: "audio" | "video" | null;
   completed: boolean;
 };
 export function LibraryArea() {
@@ -231,10 +234,13 @@ function LibraryView({ user }: { user: User }) {
         </button>
         <button
           className="button button-outline"
+          disabled={busy}
           onClick={() => {
-            void fetch("/api/student/media-session", {
-              method: "DELETE",
-            }).finally(() => signOut(getFirebaseServices().auth));
+            setUrl("");
+            setBusy(true);
+            void academySignOut()
+              .catch((e) => setError(e.message))
+              .finally(() => setBusy(false));
           }}
         >
           تسجيل الخروج
@@ -311,12 +317,10 @@ function LibraryView({ user }: { user: User }) {
                     فتح التسجيل / تجديد الإذن
                   </button>
                   {url && (
-                    <video
+                    <RecordingPlayer
                       key={url}
-                      src={url}
-                      controls
-                      preload="metadata"
-                      className="library-player"
+                      url={url}
+                      kind={lesson.mediaKind}
                       onError={() =>
                         setError(
                           "تعذّر تشغيل التسجيل. جرّب تجديد الإذن؛ قد يكون المصدر غير مهيأ أو إذنه غير متاح.",

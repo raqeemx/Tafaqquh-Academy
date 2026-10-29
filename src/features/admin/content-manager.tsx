@@ -129,7 +129,8 @@ export function ContentManager({ user }: { user: User }) {
         </div>
         <button
           className="button button-outline"
-          onClick={() => void academySignOut()}
+          disabled={busy}
+          onClick={() => void task(academySignOut)}
         >
           تسجيل الخروج
         </button>

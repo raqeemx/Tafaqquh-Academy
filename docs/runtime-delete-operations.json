@@ -1,0 +1,5 @@
+{
+  "src/app/api/admin/library-maintenance/route.ts": "Expired mediaSessions/playbackUsage and expired driveScans/candidates; administrator checked again in transaction.",
+  "src/app/api/student/progress/route.ts": "Only the authenticated student's own lesson completion marker after current lesson authorization.",
+  "src/app/api/student/recordings/route.ts": "Only mediaSessions/SHA256(cookie), on same-origin DELETE; no caller-supplied UID or document ID."
+}
